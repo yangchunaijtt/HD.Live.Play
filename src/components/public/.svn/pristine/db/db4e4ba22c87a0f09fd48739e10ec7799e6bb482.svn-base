@@ -1,0 +1,23 @@
+<template>
+  <span>{{trans}}</span>
+</template>
+
+<script>
+export default {
+  name: 'dictDisplay',
+  props: {
+    value: {
+     
+    },
+    code: {
+      type: String,
+    }
+  },
+  computed: {
+      trans(){
+          return DE.Const.transConst(this.code, this.value)
+      }
+  }
+
+}
+</script>

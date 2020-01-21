@@ -1,0 +1,111 @@
+DE.define('DE.Call', {
+  singleton: true,
+  _client: null, // 当前所在的原生环境
+  _clientType: '', // 标识原生环境
+  _calls: {}, // 所有的callback集合，type:[]
+  init: function () {
+    console.log('init client')
+    if (this._client) {
+      return this._client
+    }
+
+    if (window.android) {
+      // 安卓端注入的全局变量
+      this._client = window.android.callAndroid.bind(window.android)
+      this._clientType = 'android'
+    } else if (window.WebViewJavascriptBridge) {
+      // iOS端注入的全局变量
+      this._clientType = 'ios'
+    } else if (DEMsg) {
+      // Windows客户端注入的全局变量
+      this._clientType = 'win'
+    } else {
+      // 本地模拟测试
+      this._client = console.log.bind(console.log)
+    }
+    return this._client
+  },
+
+  // 呼叫原生程序
+  send2Native: function send2Native (msgObj) {
+    if (!this._client) {
+      console.log('未初始化，执行DE.Call.init()')
+      this.init()
+    }
+
+    switch (this._ClientType) {
+      // 苹果端
+      case 'ios':
+        this._client.callHandler('callNative', msgObj, function responseCallback (responseData) {
+          console.log('JS received response:', responseData)
+        })
+        break
+      case '':
+        // windows客户端
+        DEMsg.dealMessage(msgObj)
+        break
+      default:
+        this._client(JSON.stringify(msgObj))
+        break
+    }
+  },
+
+  registCall: function (type, callback) {
+    // callback接收参数列表为：data（数据）, type（类型）
+    type = type || 'default' // 默认注册类型，如无参调用
+
+    if (this._calls[type]) {
+      this._calls[type].push(callback)
+    } else {
+      this._calls[type] = [callback]
+    }
+  },
+
+  callByNative: function (msg) {
+    var type = msg.type // 类型
+    var data = msg.data // 数据
+
+    if (this._calls[type].length) {
+      for (var i = 0; i < this._calls[type].length; i++) {
+        this._calls[type][i].call(data, type)
+      }
+    }
+  }
+})
+
+function setupWebViewJavascriptBridge (callback) {
+  if (window.WebViewJavascriptBridge) {
+    // $('#textDebug').text('find WebViewJavascriptBridge')
+    return callback(WebViewJavascriptBridge)
+  }
+
+  // $('#textDebug').text('CAN NOT WebViewJavascriptBridge')
+
+  if (window.WVJBCallbacks) {
+    return window.WVJBCallbacks.push(callback)
+  }
+
+  window.WVJBCallbacks = [callback]
+
+  var WVJBIframe = document.createElement('iframe')
+  WVJBIframe.style.display = 'none'
+  WVJBIframe.src = 'https://__bridge_loaded__'
+  document.documentElement.appendChild(WVJBIframe)
+  setTimeout(function () {
+    document.documentElement.removeChild(WVJBIframe)
+  }, 0)
+}
+
+setupWebViewJavascriptBridge(function (bridge) {
+  bridge.registerHandler('callByNative', function (data, responseCallback) {
+    console.log('JS Echo called with:', data)
+    DE.Call.callByNative(data)
+    responseCallback(data) // 将数据data传输回ios端
+  })
+
+  DE.Call._client = function (jsonStr, callback) {
+    bridge.callHandler('callNative', jsonStr, function responseCallback (responseData) {
+      console.log('JS received response:', responseData)
+    })
+  }
+})

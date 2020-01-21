@@ -1,0 +1,29 @@
+<template>
+    <div class="display" name= 'dispaly'>
+         
+    </div>
+</template>
+
+<script>
+export default {
+    
+    name:'dispaly',
+    props:{
+        img:[String, Object],
+    },
+    computed:{
+        bgImg () {
+
+        },
+    },
+}
+</script>
+
+<style lang="scss" scoped>
+    .display{
+        width:100%;
+        height:100%;
+        background-attachment: fixed;
+        background-size:cover;
+    }
+</style>

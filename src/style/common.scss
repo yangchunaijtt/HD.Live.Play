@@ -1,0 +1,141 @@
+body,ol,ul,h1,h2,h3,h4,h5,h6,p,th,td,dl,dd,form,fieldset,legend,input,textarea,select{margin:0;padding:0}
+body{background:#fff;-webkit-text-size-adjust:100%;}
+html, body {
+  width: 100%;
+  //max-width: 750Px;
+  margin: 0 auto;
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  font-family: PingFangSC-Medium, "Avenir", Helvetica, Arial, sans-serif, 'Microsoft YaHei';
+}
+a{color:#ff6601;text-decoration:none}
+a:hover{color:#cd0200;text-decoration:underline; cursor:pointer;}
+em{font-style:normal}
+li{list-style:none}
+img{border:0;vertical-align:middle}
+table{border-collapse:collapse;border-spacing:0}
+p{word-wrap:break-word}
+input, button, select, textarea {
+  outline: none;
+}
+
+/* common */
+.color{
+  color: $color;
+}
+.clearfix:after {
+  display: block;
+  clear: both;
+  content: '';
+  visibility: hidden;
+  height: 0;
+}
+.tc{
+  text-align: center;
+}
+.tl{
+  text-align: left;
+}
+.tr{
+  text-align: right;
+}
+.oh{
+  overflow: hidden;
+}
+.df{
+  display: flex;
+}
+.f1{
+  flex: 1;
+}
+.jcsb{
+  justify-content: space-between;
+}
+.jcc{
+  justify-content: center;
+}
+.aic{
+  align-items: center;
+}
+.dt{
+  display: table;
+}
+.dtc{
+  display: table-cell;
+}
+.vat{
+  vertical-align: top;
+}
+.vam{
+  vertical-align: middle;
+}
+.fl{
+  float: left;
+}
+.fr{
+  float: right;
+}
+.dbg{
+  background-color: #ff6601;
+}
+.dc{
+  color:#ff6601;
+}
+
+/* page change */
+$--transition-time: 300ms;
+.back-enter-active,
+.back-leave-active,
+.forward-enter-active,
+.forward-leave-active {
+  will-change: transform;
+  transition: transform $--transition-time;
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  backface-visibility: hidden;
+  perspective: 1000;
+}
+.back-enter {
+  opacity: 0.75;
+  transform: translate3d(-50%, 0, 0) !important;
+}
+.back-enter-active {
+  z-index: -1 !important;
+  transition: transform $--transition-time;
+}
+.back-leave-active {
+  transform: translate3d(100%, 0, 0) !important;
+  transition: transform $--transition-time;
+}
+.forward-enter {
+  transform: translate3d(100%, 0, 0) !important;
+}
+.forward-enter-active {
+  transition: transform $--transition-time;
+}
+.forward-leave-active {
+  z-index: -1;
+  opacity: 0;
+  transform: translate3d(-50%, 0, 0) !important;
+  transition: transform $--transition-time;
+}
+
+.van-tag{
+  font-size: 12px;
+  padding: 3px 8px;
+}
+.van-tag--default{
+  background-color: #ccc;
+}
+.van-tag--danger {
+  background-color: #FF5346;
+}
+
+.van-image__img{
+  position: absolute;
+  left: 0;
+  top: 0;
+}

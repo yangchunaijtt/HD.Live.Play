@@ -1,0 +1,70 @@
+DE.define('DE.Sys.SysAppDefine.Api', {
+  extend: 'DE.Api.Root',
+
+  // 基本参数，链接服务器相关定义
+  baseParam: {
+    nameSpace: 'App.Sys.API',
+    bizName: 'SysAppDefine',
+    bizPkg: 'AppSys'
+  },
+
+  keyField: 'sID',
+
+  constructor: function () {
+    this.callParent()
+
+    this.addAction('GetDefine', {
+      opModel: 'OP_CALL_SERVER', opCode: 'DeGetDefine', opName: '获取环境信息', opShowLoading: true
+    })
+  }
+})
+
+DE.define('DE.Sys.SysAppDefine.Caller', {
+
+  extend: 'DE.Oper.Simple.Root',
+
+  // 配置
+  _config: {
+    multSel: true
+  },
+
+  constructor: function () {
+    this.callParent()
+    this.initCond()
+    this.initField()
+    this.biz = new DE.Sys.SysAppDefine.Api()
+
+    this.Ctl = {
+      Srv: {},
+      SMS: {
+        phone: '',
+        code: ''
+      },
+      UI: {
+        CheckTitle: '登录'
+      }
+    }
+
+    DE.merge(this.config, this._config)
+  },
+
+  initCond: function () {
+  },
+
+  initField: function () {
+  },
+
+  getAppDefine: function (appcode) {
+    var _this = this
+    return new DE.Promise(function (resolve, reject) {
+      _this.callAction('GetDefine', {
+        app:appcode
+      }, {
+        onSuccess: function (bizdata, def) {
+            resolve(bizdata.Define)
+        }
+      })
+    })
+  }
+
+})

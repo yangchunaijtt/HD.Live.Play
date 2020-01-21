@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" >
+    <link rel="icon" href="<%= BASE_URL %>appicon.ico">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0,viewport-fit=cover" >
+    <style media="screen" type="text/css">
+      /* 页面loading */
+      .pageLoading{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+      }
+      .chasing-dots {
+        min-width: 40px;
+        min-height: 40px;
+        position: relative;
+        text-align: center;
+        -webkit-animation: rotate 2.0s infinite linear;
+        -moz-animation: rotate 2.0s infinite linear;
+        -o-animation: rotate 2.0s infinite linear;
+        animation: rotate 2.0s infinite linear;
+      }
+
+      .dot1, .dot2 {
+        width: 50%;
+        height: 50%;
+        display: inline-block;
+        position: absolute;
+        top: 0;
+        background-color: #ff6601;
+        border-radius: 100%;
+
+        -webkit-animation: bounce 2.0s infinite ease-in-out;
+        -moz-animation: bounce 2.0s infinite ease-in-out;
+        -o-animation: bounce 2.0s infinite ease-in-out;
+        animation: bounce 2.0s infinite ease-in-out;
+      }
+
+      .dot2 {
+        top: auto;
+        bottom: 0;
+        -webkit-animation-delay: -1.0s;
+        animation-delay: -1.0s;
+      }
+
+      @-webkit-keyframes rotate { 100% { -webkit-transform: rotate(360deg) }}
+      @-moz-keyframes rotate { 100% { -moz-transform: rotate(360deg) }}
+      @-o-keyframes rotate { 100% { -o-transform: rotate(360deg) }}
+      @keyframes rotate { 100% { transform: rotate(360deg); }}
+
+      @-webkit-keyframes bounce {
+        0%, 100% { -webkit-transform: scale(0.0) }
+        50% { -webkit-transform: scale(1.0) }
+      }
+      @-moz-keyframes bounce {
+        0%, 100% { -moz-transform: scale(0.0) }
+        50% { -moz-transform: scale(1.0) }
+      }
+      @-o-keyframes bounce {
+        0%, 100% { -o-transform: scale(0.0) }
+        50% { -o-transform: scale(1.0) }
+      }
+      @keyframes bounce {
+        0%, 100% {
+          transform: scale(0.0);
+        } 50% {
+            transform: scale(1.0);
+          }
+      }
+    </style>
+    <% if (process.env.NODE_ENV === 'development') { %>
+      <script src="./de-core/jquery.min.js"></script>
+      <script src="./de-core/01-core/de.core.js"></script>
+      <script src="./de-core/01-core/de.func.js"></script>
+      <script src="./de-core/01-core/de.jp.js"></script>
+      <script src="./de-core/02-root/de.root.js"></script>
+      <script src="./de-core/03-base/de.instance.js"></script>
+      <script src="./de-core/03-base/de.wx.js"></script>
+      <script src="./de-core/03-base/de.const.js"></script>
+      <script src="./de-core/03-base/de.call.js"></script>
+      <script src="./de-core/03-base/de.const.init.js"></script>
+      <script src="./de-core/05-tools/de.tools.browser.js"></script>
+      <script src="./de-core/05-tools/de.tools.datetime.js"></script>
+      <script src="./de-core/05-tools/de.tools.format.js"></script>
+      <script src="./de-core/05-tools/de.tools.http.js"></script>
+      <script src="./de-core/06-ui/de.ui.js"></script>
+      <script src="./de-core/30-tpl/de.biz.root.js"></script>
+      <script src="./de-core/30-tpl/de.oper.root.js"></script>
+      <script src="./de-core/30-tpl/de.oper.simple.root.js"></script>
+      <script src="./de-core/30-tpl/de.oper.tree.root.js"></script>
+
+      <script src="./de-core/90-biz/10-sys/de.sys.sms.caller.js"></script>
+      <script src="./de-core/90-biz/10-sys/de.sys.appdefine.caller.js"></script>
+
+      <script src="./de-core/90-biz/30-school/student/de.school.student.caller.js"></script>
+      <script src="./de-core/90-biz/30-school/teacher/de.school.teacher.caller.js"></script>
+      <script src="./de-core/90-biz/30-school/lesson/de.school.lesson.live.caller.js"></script>
+
+      
+
+   <% } %>
+
+    <% if (process.env.NODE_ENV === 'production') { %> <% for(var css of
+      htmlWebpackPlugin.options.cdn.css) { %>
+      <link href="<%=css%>" rel="preload" as="style" />
+      <link rel="stylesheet" href="<%=css%>" as="style" />
+      <% } %> <% for(var js of htmlWebpackPlugin.options.cdn.js) { %>
+      <link href="<%=js%>" rel="preload" as="script" />
+      <script src="<%=js%>"></script>
+      <% } %>
+      <script src="./scripts/hd.live.client.js?202001031633"></script>
+      <% } %>
+    <title><%= process.env.VUE_APP_BASE_TITLE %></title>
+    <script src="//at.alicdn.com/t/font_1289061_lw51dd9x5k.js"></script>
+
+    <script src="https://p.bokecc.com/player?siteid=2661F9756E5C832E&newversion=true"></script>
+    <script>
+      function onCCH5PlayerLoaded() {
+        window.ccH5PlayerJsLoaded = true;
+      } 
+    </script> 
+  </head>
+  <body oncontextmenu ='return false'>
+    <noscript>
+      <strong>We're sorry but <%= process.env.VUE_APP_BASE_TITLE %> doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
+    </noscript>
+    <div id="app">
+      <div class="pageLoading">
+        <div class="chasing-dots">
+          <div class="dot1"></div>
+          <div class="dot2"></div>
+        </div>
+      </div>
+    </div>
+    <!-- built files will be auto injected -->
+
+  </body>
+</html>

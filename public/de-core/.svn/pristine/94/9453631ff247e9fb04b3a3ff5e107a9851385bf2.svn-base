@@ -1,0 +1,105 @@
+function setupWebViewJavascriptBridge (callback) {
+  if (window.WebViewJavascriptBridge) {
+    return callback(WebViewJavascriptBridge)
+  }
+
+  if (window.WVJBCallbacks) {
+    return window.WVJBCallbacks.push(callback)
+  }
+
+  window.WVJBCallbacks = [callback]
+
+  var WVJBIframe = document.createElement('iframe')
+  WVJBIframe.style.display = 'none'
+  WVJBIframe.src = 'wvjbscheme://__BRIDGE_LOADED__'
+  document.documentElement.appendChild(WVJBIframe)
+  setTimeout(function () {
+    document.documentElement.removeChild(WVJBIframe)
+  }, 0)
+}
+
+DE.define('DE.Call', {
+
+  singleton: true,
+  _client: null, // 当前所在的原生环境
+  _clientType: '', // 标识原生环境
+  _calls: {}, // 所有的callback集合，type:[]
+
+  init: function () {
+    // 如果已经发现桥
+    if (this._clientType) {
+      return
+    }
+
+    // 首选检查Windows
+    try {
+      console.log(DEMsg)
+      this._clientType = 'DEMsg'
+      return
+    } catch (e) {
+    }
+
+    try {
+      console.log(DEAndroid)
+      this._clientType = 'DEAndroid'
+      return
+    } catch (e) {
+    }
+
+    var _this = this
+    setupWebViewJavascriptBridge(function (bridge) {
+      _this._clientType = 'Bridge'
+      _this._client = bridge
+    })
+  },
+
+  // 呼叫原生程序
+  send2Native: function send2Native (msgObj) {
+    if (!this._clientType) {
+      this.init()
+    }
+
+    switch (this._clientType) {
+      case 'Bridge':
+        this._client.callHandler('callNative', msgObj, function responseCallback (responseData) {
+          console.log('JS received response:', responseData)
+        })
+        break
+      case 'DEAndroid':
+        DEAndroid.dealMessage(JSON.stringify(msgObj))
+        break
+      case 'DEMsg':
+        // windows客户端
+        msgObj.CallerKey = AWindowKey
+        DEMsg.dealMessage(JSON.stringify(msgObj))
+        break
+      default:
+        this._client(JSON.stringify(msgObj))
+        break
+    }
+  },
+
+  registCall: function (type, callback) {
+    // callback接收参数列表为：data（数据）, type（类型）
+    type = type || 'default' // 默认注册类型，如无参调用
+
+    if (this._calls[type]) {
+      this._calls[type].push(callback)
+    } else {
+      this._calls[type] = [callback]
+    }
+  },
+
+  callByNative: function (msg) {
+    var type = msg.type // 类型
+    var data = msg.data // 数据
+
+    if (this._calls[type].length) {
+      for (var i = 0; i < this._calls[type].length; i++) {
+        this._calls[type][i].call(data, type)
+      }
+    }
+  }
+})
+
+DE.Call.init()

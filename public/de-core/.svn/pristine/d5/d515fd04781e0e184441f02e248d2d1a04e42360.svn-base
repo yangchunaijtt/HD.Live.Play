@@ -1,0 +1,440 @@
+﻿Date.prototype.Format = function (fmt) {
+  var o = {
+    'M+': this.getMonth() + 1, // 月份
+    'd+': this.getDate(), // 日
+    'H+': this.getHours(), // 小时
+    'm+': this.getMinutes(), // 分
+    's+': this.getSeconds(), // 秒
+    'q+': Math.floor((this.getMonth() + 3) / 3), // 季度
+    'S': this.getMilliseconds() // 毫秒
+  }
+  if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (this.getFullYear() + '').substr(4 - RegExp.$1.length))
+  for (var k in o) { if (new RegExp('(' + k + ')').test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (('00' + o[k]).substr(('' + o[k]).length))) }
+  return fmt
+}
+
+Date.prototype.AddDay = function (days) {
+  var _dt = new Date(this)
+  if (days == undefined || days == '') {
+    days = 0
+  }
+  _dt.setDate(_dt.getDate() + days)
+
+  return _dt
+}
+
+Date.prototype.WeekDay = function () {
+  var _dt = new Date(this)
+  var arr = new Array('日', '一', '二', '三', '四', '五', '六')
+  var week = _dt.getDay()
+  return arr[week]
+}
+
+Date.prototype.WeekBegin = function () {
+  var _dt = new Date(this)
+  var iday = _dt.getDay()
+
+  if (iday == 0) {
+    _dt.setDate(_dt.getDate() - 6)
+  } else {
+    _dt.setDate(_dt.getDate() - iday + 1)
+  }
+
+  return _dt
+}
+
+Date.prototype.MonthBegin = function () {
+  var _dt = new Date(this.Format('yyyy/MM/01'))
+  return _dt
+}
+
+Date.prototype.AsDate = function () {
+  var str = this.Format('yyyy-MM-dd')
+  var dt = new Date(str)
+  return dt
+}
+
+Date.prototype.Month = function () {
+  var _dt = new Date(this)
+  var arr = new Array('Jan', 'Feb', 'Mar', 'Apr', 'May', 'June', 'July', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec')
+  var month = _dt.getMonth()
+  return arr[month]
+}
+
+Date.prototype.Force = function (val) {
+  // console.log("force:" + val);
+  try {
+    if (val.getYear()) {
+      return val
+    }
+  } catch (e) { }
+
+  try {
+    return eval('new ' + eval(val).source)
+  } catch (e) { }
+
+  try {
+    var dtstr = val.replace(/-/g, '/')
+    var dt = new Date(dtstr)
+    if (dt.getYear()) {
+      return dt
+    }
+  } catch (e) { }
+
+  try {
+    if (val.indexOf('T') > 0) {
+      var sdate = val.replace('T', ' ')
+      return new Date(sdate)
+    }
+  } catch (e) { }
+  return null
+}
+
+Date.prototype.Diff = function (val, type) {
+  var dtstart = this.getTime()
+  var dtend = val.getTime()
+
+  var diff = dtend - dtstart
+  var result = 0
+
+  switch (type) {
+    case 's':
+      result = diff / 1000
+      break
+    case 'm':
+      result = diff / (1000 * 60)
+      break
+    case 'h':
+      result = diff / (1000 * 60 * 60)
+      break
+    case 'D':
+      result = diff / (1000 * 60 * 60 * 24)
+      break
+    default:
+  }
+  return Math.floor(result)
+}
+
+Date.prototype.Equal = function (val, type) {
+  switch (type) {
+    case 's':
+      return val.Format('yyyyMMddHHmmss') == this.Format('yyyyMMddHHmmss')
+    case 'm':
+      return val.Format('yyyyMMddHHmm') == this.Format('yyyyMMddHHmm')
+    case 'h':
+      return val.Format('yyyyMMddHH') == this.Format('yyyyMMddHH')
+    case 'd':
+      return val.Format('yyyyMMdd') == this.Format('yyyyMMdd')
+    case 'M':
+      return val.Format('yyyyMM') == this.Format('yyyyMM')
+    case 'y':
+      return val.Format('yyyy') == this.Format('yyyy')
+    default:
+      return false
+  }
+}
+
+Array.prototype.indexOfProp = function (val, prop, force) {
+  for (var i = 0; i < this.length; i++) {
+    if (typeof val === 'object') {
+      if (this[i][prop] == val[prop]) return i
+    } else {
+      if (force) {
+        if (this[i][prop] == val) return i
+      } else {
+        if (this[i] == val) return i
+      }
+    }
+  }
+  return -1
+}
+
+Array.prototype.remove = function (val, prop, force) {
+  var index = this.indexOfProp(val, prop, force)
+  if (index > -1) {
+    this.splice(index, 1)
+  }
+}
+
+Array.prototype.replace = function (val, prop, force) {
+  var index = this.indexOfProp(val, prop, force)
+  if (index > -1) {
+    this.remove(val, prop)
+    this.insert(index, val)
+  }
+}
+
+Array.prototype.setProp = function (prop, val) {
+  for (var i = 0; i < this.length; i++) {
+    if (typeof this[i] === 'object') {
+      this[i][prop] = val
+    }
+  }
+}
+
+Array.prototype.getItem = function (val, prop) {
+  for (var i = 0; i < this.length; i++) {
+    if (typeof val === 'object') {
+      if (this[i][prop] == val[prop]) return this[i]
+    } else {
+      if (typeof this[i] === 'object') {
+        if (this[i][prop] == val) return this[i]
+      } else {
+        if (this[i] == val) return this[i]
+      }
+    }
+  }
+  return null
+}
+
+Array.prototype.countItem = function (val, prop) {
+  var icount = 0
+  for (var i = 0; i < this.length; i++) {
+    if (typeof val === 'object') {
+      icount += this[i][prop] == val[prop] ? 1 : 0
+    } else {
+      if (typeof this[i] === 'object') {
+        icount += this[i][prop] == val ? 1 : 0
+      } else {
+        icount += this[i] == val == val ? 1 : 0
+      }
+    }
+  }
+  return icount
+}
+
+Array.prototype.sumItem = function (prop) {
+  var isum = 0
+  for (var i = 0; i < this.length; i++) {
+    isum += this[i][prop] ? this[i][prop] : 0
+  }
+  return isum
+}
+
+Array.prototype.insert = function (index, item) {
+  this.splice(index, 0, item)
+}
+
+Array.prototype.copy = function (arr) {
+  this.splice(0)
+  if (arr) {
+    for (var i = 0; i < arr.length; i++) {
+      this.push(arr[i])
+    }
+  }
+}
+
+Array.prototype.triggleSel = function (item, mult) {
+  mult = mult || false
+
+  if (!mult) {
+    for (var i = 0; i < this.length; i++) {
+      this[i].sel = false
+    }
+    item.sel = true
+  } else {
+    item.sel = !item.sel
+  }
+  this.fresh()
+}
+
+Array.prototype.getSel = function (prop) {
+  var sels = new Array()
+
+  for (var i = 0; i < this.length; i++) {
+    if (this[i].sel) {
+      sels.push(this[i][prop])
+    }
+  }
+
+  return sels
+}
+
+Array.prototype.clone = function () {
+  return JSON.parse(JSON.stringify(this))
+}
+
+Array.prototype.clear = function (arr) {
+  this.splice(0)
+}
+
+Array.prototype.fresh = function (arr) {
+  this.splice(this.length)
+}
+
+Array.prototype.sortBy = function (prop, direct) {
+  this.sort(DEObjCompare(prop, direct))
+  this.fresh()
+}
+
+Array.prototype.sortByCN = function (prop, direct) {
+  this.sort(DEObjCompareCN(prop, direct))
+  this.fresh()
+}
+
+String.prototype.format = function (args) {
+  var result = this
+  if (arguments.length > 0) {
+    if (arguments.length == 1 && typeof (args) === 'object') {
+      for (var key in args) {
+        if (args[key] != undefined) {
+          var reg = new RegExp('({' + key + '})', 'g')
+          result = result.replace(reg, args[key])
+        }
+      }
+    } else {
+      for (var i = 0; i < arguments.length; i++) {
+        if (arguments[i] != undefined) {
+          // var reg = new RegExp("({[" + i + "]})", "g");//这个在索引大于9时会有问题，谢谢何以笙箫的指出
+          var reg = new RegExp('({)' + i + '(})', 'g')
+          result = result.replace(reg, arguments[i])
+        }
+      }
+    }
+  }
+  return result
+}
+
+// 基于对象属性的排序函数
+function DEObjCompare (prop, direct) {
+  direct = (direct) || 'ASC'
+  return function (obj1, obj2) {
+    var val1 = eval('obj1.' + prop) // obj1[prop];
+    var val2 = eval('obj2.' + prop) // obj2[prop];
+
+    if (val1 < val2) {
+      return (direct == 'ASC') ? -1 : 1
+    } else if (val1 > val2) {
+      return (direct == 'ASC') ? 1 : -1
+    } else {
+      return 0
+    }
+  }
+}
+
+function DEObjCompareCN (prop, direct) {
+  direct = (direct) || 'ASC'
+  return function (obj1, obj2) {
+    var val1 = eval('obj1.' + prop)
+    var val2 = eval('obj2.' + prop)
+
+    var result = val1.localeCompare(val2, 'zh')
+
+    return result
+  }
+}
+
+// ScrollEnd
+$.fn.scrollEnd = function (callback, timeout) {
+  $(this).scroll(function () {
+    var $this = $(this)
+    if ($this.data('scrollTimeout')) {
+      clearTimeout($this.data('scrollTimeout'))
+    }
+    $this.data('scrollTimeout', setTimeout(callback, timeout))
+  })
+}
+
+// ResizeEnd
+$.fn.resizeEnd = function (callback, timeout) {
+  $(this).resize(function () {
+    var $this = $(this)
+    if ($this.data('resizeTimeout')) {
+      clearTimeout($this.data('resizeTimeout'))
+    }
+    $this.data('resizeTimeout', setTimeout(callback, timeout))
+  })
+}
+
+// GUID相关方法
+function Guid (g) {
+  var arr = new Array() // 存放32位数值的数组
+  if (typeof (g) === 'string') { // 如果构造函数的参数为字符串
+    InitByString(arr, g)
+  } else {
+    InitByOther(arr)
+  }
+
+  // 返回一个值，该值指示 Guid 的两个实例是否表示同一个值。
+  this.Equals = function (o) {
+    if (o && o.IsGuid) {
+      return this.ToString() == o.ToString()
+    } else {
+      return false
+    }
+  }
+
+  // Guid对象的标记
+  this.IsGuid = function () { }
+  // 返回 Guid 类的此实例值的 String 表示形式。
+  this.ToString = function (format) {
+    if (typeof (format) === 'string') {
+      if (format == 'N' || format == 'D' || format == 'B' || format == 'P') {
+        return ToStringWithFormat(arr, format)
+      } else {
+        return ToStringWithFormat(arr, 'D')
+      }
+    } else {
+      return ToStringWithFormat(arr, 'D')
+    }
+  }
+
+  // 由字符串加载
+  function InitByString (arr, g) {
+    g = g.replace(/\{|\(|\)|\}|-/g, '')
+    g = g.toLowerCase()
+    if (g.length != 32 || g.search(/[^0-9,a-f]/i) != -1) {
+      InitByOther(arr)
+    } else {
+      for (var i = 0; i < g.length; i++) {
+        arr.push(g[i])
+      }
+    }
+  }
+
+  // 由其他类型加载
+  function InitByOther (arr) {
+    var i = 32
+    while (i--) {
+      arr.push('0')
+    }
+  }
+  /*
+    根据所提供的格式说明符，返回此 Guid 实例值的 String 表示形式。
+    N  32 位： EMallEMallEMallEMallEMallxx
+    D  由连字符分隔的 32 位数字 EMallxx-xxxx-xxxx-xxxx-EMallEMall
+    B  括在大括号中、由连字符分隔的 32 位数字：{EMallxx-xxxx-xxxx-xxxx-EMallEMall}
+    P  括在圆括号中、由连字符分隔的 32 位数字：(EMallxx-xxxx-xxxx-xxxx-EMallEMall)
+    */
+
+  function ToStringWithFormat (arr, format) {
+    switch (format) {
+      case 'N':
+        return arr.toString().replace(/,/g, '')
+      case 'D':
+        var str = arr.slice(0, 8) + '-' + arr.slice(8, 12) + '-' + arr.slice(12, 16) + '-' + arr.slice(16, 20) + '-' + arr.slice(20, 32)
+        str = str.replace(/,/g, '')
+        return str
+      case 'B':
+        var str = ToStringWithFormat(arr, 'D')
+        str = '{' + str + '}'
+        return str
+      case 'P':
+        var str = ToStringWithFormat(arr, 'D')
+        str = '(' + str + ')'
+        return str
+      default:
+        return new Guid()
+    }
+  }
+}
+
+Guid.Empty = new Guid()
+Guid.NewGuid = function () {
+  var g = ''
+  var i = 32
+  while (i--) {
+    g += Math.floor(Math.random() * 16.0).toString(16)
+  }
+  return new Guid(g)
+}

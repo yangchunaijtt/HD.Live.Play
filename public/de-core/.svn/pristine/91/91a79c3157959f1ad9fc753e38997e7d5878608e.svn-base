@@ -1,0 +1,89 @@
+// 业务操作对象定义
+
+DE.define('DE.Biz.Root', {
+  extend: 'DE.util.Observable',
+
+  // 基本信息的定义
+  baseParam: {
+    nameSpace: '',
+    bizName: '',
+    bizPkg: ''
+  },
+
+  def: {
+    defaultQuery: 'DEFAULT_QUERY'
+  },
+
+  callAction: '/App/PubApiDeal/ProcessRequest',
+
+  // Action 动作的定义
+  actions: [],
+
+  constructor: function () {
+    this.actions = new Array()
+  },
+
+  queryCode: 'Query',
+  keyField: 'sID',
+
+  addAction: function (ACode, ADef) {
+    var def = {
+    }
+    ADef.bizOpCode = ACode
+    DE.apply(def, this.baseParam)
+    DE.apply(def, ADef)
+    this.actions.push(def)
+  },
+
+  getAction: function (ACode) {
+    var obj = this.actions.getItem(ACode, 'bizOpCode')
+    if (!obj) console.log('can not find action code : ' + ACode)
+    return obj
+  },
+
+  fillCallParam: function (ADef, AConfig) {
+    AConfig.opcls = this.baseParam.nameSpace + '.' + this.baseParam.bizName
+    AConfig.opCode = ADef.opCode
+    AConfig.bizPkg = this.baseParam.bizPkg
+
+    // 如果有预填信息
+    if (ADef.opValue) {
+      DE.merge(AConfig, ADef.opValue)
+    }
+  },
+
+  // 服务器通讯
+  callServer: function (AData, callok, callerr, AShowLoading) {
+    DETHttp.post(this.callAction, AData,
+      function (_data) {
+        if (_data.Status == 1) {
+          callok(_data.BizData)
+
+          if (_data.Msg) {
+            DEUI.showBootoast({
+              message: _data.Msg,
+              type: 'success'
+            })
+          }
+        } else {
+          // 预埋统一错误处理， detodo
+          var msg = (_data.Msg) ? _data.Msg : _data.msg
+          DEUI.showBootoast({
+            message: msg,
+            type: 'danger'
+          })
+          if (callerr) {
+            callerr(_data)
+          }
+        }
+      },
+      callerr, AShowLoading
+    )
+  }
+
+})
+
+DE.define('DE.Api.Root', {
+  extend: 'DE.Biz.Root',
+  callAction: '/PubApiDeal/ProcessRequest'
+})

@@ -1,0 +1,31 @@
+<template>
+    <div class="display" name= 'dispaly' :style="{'background-image':'url('+bgImg+')'}"></div>
+</template>
+
+<script>
+export default {
+    
+    name:'dispaly',
+    props:{
+        bnImg:[String, Object],
+    },
+    computed:{
+        bgImg () {
+            if ( typeof this.bnImg === 'object') {
+                this.bnImg = JSON.parse(this.bnImg)
+            }
+            return this.bnImg
+        },
+    },
+}
+</script>
+
+<style lang="scss" scoped>
+    .display{
+        border-radius: 50%;
+        overflow: hidden;
+        background-repeat: no-repeat;
+        background-size: contain;
+        background-size: cover;
+    }
+</style>

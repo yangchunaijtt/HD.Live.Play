@@ -1,0 +1,211 @@
+const FMT = 'yyyy-MM-dd'
+
+export default class Calendar {
+  constructor () {
+    this.weeks = []
+    this.range = {
+      begin: null,
+      end: null
+    }
+    this.type = 'month'
+    this.monthWeek = ''
+    return this
+  }
+
+  days = []
+  month = new Date()
+  rangeCallBack = null
+  dayCallBack = null
+
+  init = (rangeBack, dayBack) => {
+    this.rangeCallBack = rangeBack
+    this.dayCallBack = dayBack
+  }
+
+  setWeek = (date) => {
+    // 获取
+    const dtBegin = date.WeekBegin()
+    const currMonth = parseInt(date.Format('yyyyMM'))
+    let weeks = [{ days: [] }]
+
+    this.days = []
+    this.range.begin = dtBegin
+    this.range.end = date.AddDay(6)
+
+    for (let i = 0; i < 7; i++) {
+      const _day = dtBegin.AddDay(i)
+      const dayObj = this.newDay(_day, currMonth)
+      dayObj.today = new Date().Equal(_day, 'd')
+      dayObj.sel = date.Diff(_day, 'D') === 0
+      weeks[0].days.push(dayObj)
+    }
+
+    this.weeks = weeks
+    this.weeks.fresh()
+  };
+
+  newDay = (_day, currMonth) => {
+    const dayObj = {
+      date: _day,
+      inRange: parseInt(_day.Format('yyyyMM')) === currMonth,
+      today: 0,
+      sel: 0,
+      data: {},
+      daystr: _day.Format('yyyyMMdd'),
+      events: []
+    }
+    this.days.push(dayObj)
+    return dayObj
+  }
+
+  setRange = (date, ingnorday = true, type = 'month') => {
+    date = date ? DETDT.forceDate(date) : new Date()
+
+    switch (type) {
+      case 'month':
+        this.setMonth(date)
+        break
+      case 'week':
+        this.setWeek(date)
+        break
+      default:
+        this.setMonth(date)
+        break
+    }
+
+    this.type = type
+    this.date = date
+    this.month = date
+    this.monthWeek = date.MonthWeek()
+
+    if (this.rangeCallBack) {
+      this.rangeCallBack(this.range)
+    }
+
+    if (!ingnorday) {
+      this.setDate(date)
+    }
+  }
+
+  setMonth = (date) => {
+    // 获取
+    const dtBegin = date.MonthBegin().WeekBegin()
+    const currMonth = parseInt(date.Format('yyyyMM'))
+    let days = 0
+    let weeks = []
+
+    this.range.begin = dtBegin
+    this.days = []
+
+    while (true) {
+      const _weekIdx = parseInt(days / 7)
+      const _day = dtBegin.AddDay(days)
+      const _dayIdx = days % 7
+      const _month = parseInt(_day.Format('yyyyMM'))
+
+      if (_month > currMonth) {
+        const lastWeek = weeks[weeks.length - 1]
+        let jIdx = 0
+        for (let i = lastWeek.days.length; i < 7; i++) {
+          const dayObj = this.newDay(_day.AddDay(jIdx), currMonth)
+          lastWeek.days.push(dayObj)
+          jIdx++
+        }
+        this.range.end = _day.AddDay(jIdx - 1)
+        break
+      }
+
+      if (weeks.length - 1 < _weekIdx) {
+        weeks.push({
+          days: []
+        })
+      }
+
+      if (weeks[_weekIdx].days.length - 1 < _dayIdx) {
+        const dayObj = this.newDay(_day, currMonth)
+        dayObj.today = new Date().Equal(_day, 'd')
+        dayObj.sel = date.Diff(_day, 'D') === 0
+        weeks[_weekIdx].days.push(dayObj)
+      }
+
+      days++
+    }
+
+    this.weeks = weeks
+    this.weeks.fresh()
+  };
+
+  setDate = (date) => {
+    for (let i = 0; i < this.weeks.length; i++) {
+      for (let j = 0; j < this.weeks[i].days.length; j++) {
+        this.weeks[i].days[j].sel = date.Equal(this.weeks[i].days[j].date, 'd')
+      }
+    }
+
+    if (this.type === 'week' && this.date.WeekBegin().Format(FMT) !== date.WeekBegin().Format(FMT)) {
+      this.setRange(date, true, this.type)
+    }
+
+    if (this.type === 'month' && !this.date.Equal(date, 'M')) {
+      this.setRange(date, true, this.type)
+    }
+
+    if (this.dayCallBack) {
+      this.dayCallBack(date)
+    }
+
+    this.date = date
+  }
+
+  setEvents = (list, todoField) => {
+    for (let i = 0; i < this.days.length; i++) {
+      this.days[i].events.clear()
+    }
+
+    for (let i = 0; i < list.length; i++) {
+      const ldate = DETDT.forceDate(list[i].dtBegin).Format('yyyyMMdd')
+      const day = this.days.getItem(ldate, 'daystr')
+      if (day) {
+        day.events.push(list[i])
+      }
+    }
+
+    if (todoField) {
+      for (let i = 0; i < this.days.length; i++) {
+        const _day = this.days[i]
+        _day.todo = 0
+        for (let j = 0; j < _day.events.length; j++) {
+          _day.todo += _day.events[j][todoField]
+        }
+      }
+    }
+
+    this.weeks.fresh()
+  }
+
+  nextWeek = () => {
+    this.week = []
+    const date = this.date.WeekBegin().AddDay(7).WeekBegin()
+    this.setRange(date, false, 'week')
+  };
+
+  prevWeek = () => {
+    this.week = []
+    const date = this.date.WeekBegin().AddDay(-1).WeekBegin()
+    this.setRange(date, false, 'week')
+  };
+
+  nextMonth = () => {
+    const date = this.date.MonthBegin().AddDay(32).MonthBegin()
+    this.setRange(date, false)
+  }
+
+  prevMonth = () => {
+    const date = this.date.MonthBegin().AddDay(-1).MonthBegin()
+    this.setRange(date, false)
+  }
+
+  gotoToday = () => {
+    this.setRange(new Date())
+  }
+}

@@ -1,0 +1,147 @@
+DE.define('DE.Sys.SysSMSTarget.Api', {
+  extend: 'DE.Api.Root',
+
+  // 基本参数，链接服务器相关定义
+  baseParam: {
+    nameSpace: 'App.Sys.API',
+    bizName: 'SysSMSTarget',
+    bizPkg: 'AppSys'
+  },
+
+  keyField: 'sID',
+
+  constructor: function () {
+    this.callParent()
+
+    this.addAction('Init', {
+      opModel: 'OP_CALL_SERVER', opCode: 'DeInit', opName: '初始化环境', opShowLoading: true
+    })
+
+    this.addAction('Send', {
+      opModel: 'OP_CALL_SERVER', opCode: 'DeSend', opName: '发送验证码', opShowLoading: true
+    })
+
+    this.addAction('Check', {
+      opModel: 'OP_CALL_SERVER', opCode: 'DeCheck', opName: '检查验证码'
+    })
+  }
+})
+
+DE.define('DE.Sys.SysSMSTarget.Caller', {
+
+  extend: 'DE.Oper.Simple.Root',
+
+  // 配置
+  _config: {
+    multSel: true
+  },
+
+  constructor: function () {
+    this.callParent()
+    this.initCond()
+    this.initField()
+    this.biz = new DE.Sys.SysSMSTarget.Api()
+
+    this.Ctl = {
+      Srv: {},
+      SMS: {
+        phone: '',
+        code: ''
+      },
+      UI: {
+        CheckTitle: '登录'
+      }
+    }
+
+    DE.merge(this.config, this._config)
+  },
+
+  initCond: function () {
+  },
+
+  initField: function () {
+  },
+
+  setTimeDown: function () {
+    var _this = this
+
+    if (this.Ctl.Srv) {
+      if (this.Ctl.Srv.NextSend) {
+        this.Ctl.Srv.NextSend--
+      }
+
+      DE.Vue.set(this.Ctl.UI, 'NextSend', this.Ctl.Srv.NextSend)
+
+      if (this.Ctl.Srv.NextCheck) {
+        this.Ctl.Srv.NextCheck--
+        DE.Vue.set(this.Ctl.UI, 'CheckTitle', this.Ctl.Srv.NextCheck + 1 + ' 秒后重新尝试')
+      } else {
+        this.Ctl.Srv.CheckStatus = true
+        this.Ctl.UI.CheckTitle = '登录'
+      }
+
+      DE.Vue
+      DE.Vue.set(this.Ctl.UI, 'CheckStatus', this.Ctl.Srv.CheckStatus && this.Ctl.SMS.code.length == 4)
+
+      setTimeout(function () {
+        _this.setTimeDown()
+      }, 1000)
+    }
+  },
+
+  // 初始化当前环境
+  initEnv: function () {
+    var _this = this
+
+    return new DE.Promise(function (resolve, reject) {
+      _this.callAction('Init', {}, {
+        onSuccess: function (bizdata, def) {
+          _this.Ctl.Srv = bizdata.SMS
+          _this.Ctl.SMS.code = (_this.Ctl.Srv.code) ? _this.Ctl.Srv.code : ''
+          _this.Ctl.SMS.phone = _this.Ctl.Srv.Phone
+          _this.Ctl.SMS.targetID = _this.Ctl.Srv.TargetID
+          _this.setTimeDown()
+        }
+      })
+    })
+  },
+
+  callSend: function () {
+    var _this = this
+    return new DE.Promise(function (resolve, reject) {
+      _this.callAction('Send', _this.Ctl.SMS, {
+        onSuccess: function (bizdata, def) {
+          // 应用复制环境
+          DE.apply(_this.Ctl.Srv, bizdata.SMS)
+          if (bizdata.SMS.Code) {
+            _this.Ctl.SMS.code = bizdata.SMS.Code
+          }
+          if (_this.Ctl.Srv.SendResult) {
+            DEUI.showBootoast('验证码发送成功')
+          }
+        }
+      })
+    })
+  },
+
+  callCheck: function () {
+    var _this = this
+    return new DE.Promise(function (resolve, reject) {
+      _this.callAction('Check', _this.Ctl.SMS, {
+        onSuccess: function (bizdata, def) {
+          DE.apply(_this.Ctl.Srv, bizdata.SMS)
+          if (bizdata.SMS.CheckResult) {
+            resolve(bizdata.SMS)
+          } else {
+            DEUI.showBootoast('验证码不正确')
+          }
+        }
+      })
+    })
+  },
+
+  checkPhone: function () {
+    DE.Vue.set(this.Ctl.UI, 'PhoneCheck', DE.Validate.isMobile(this.Ctl.SMS.phone))
+  }
+
+})

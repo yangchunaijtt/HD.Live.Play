@@ -1,0 +1,215 @@
+﻿
+DE.define('DE.Sys.SysGroup.Biz', {
+  extend: 'DE.Biz.Root',
+
+  // 基本参数，链接服务器相关定义
+  baseParam: {
+    nameSpace: 'Site.Sys.JSON',
+    bizName: 'SysGroup',
+    bizPkg: 'BizSys'
+  },
+
+  keyField: 'sID',
+
+  constructor: function () {
+    this.callParent()
+
+    this.addAction('Query', {
+      opModel: 'OP_QUERY',
+      opCode: 'DeGetPageData',
+      opName: '查询'
+    })
+
+    this.addAction('Reset', {
+      opModel: 'OP_RESET',
+      opName: '重置',
+      opAfter: 'Query'
+    })
+
+    this.addAction('New', {
+      opModel: 'OP_NEW',
+      opCode: 'DeSaveObjData',
+      opName: '新增',
+      opAfter: 'Query',
+      opForm: 'edit',
+      opFormTitle: '新增机构'
+    })
+
+    this.addAction('Update', {
+      opModel: 'OP_UPDATE',
+      opCodeGet: 'DeGetObjData',
+      opCode: 'DeSaveObjData',
+      opName: '修改',
+      opAfter: 'Query',
+      opForm: '#biz-sysgroup-edit',
+      opFormTitle: '修改机构'
+    })
+
+    this.addAction('Delete', {
+      opModel: 'OP_BATCH',
+      opCode: 'DeDelObjData',
+      opName: '删除',
+      opAfter: 'Query',
+      opMsgSingle: '确实要删除"{sGroupName}"吗?',
+      opMsgMult: '确实要删除选中的{0}条数据吗?'
+    })
+
+    this.addAction('ManagerGet', {
+      opModel: 'OP_SHOW',
+      opCodeGet: 'DeManagerGet',
+      opName: '机构管理'
+    })
+
+    this.addAction('GetGroupMp', {
+      opModel: 'OP_CALL_SERVER',
+      opCode: 'DeGetGroupMp',
+      opName: '刷新'
+    })
+  }
+})
+
+DE.define('DE.Sys.SysGroup.Oper', {
+
+  extend: 'DE.Oper.Simple.Root',
+
+  // 配置
+  _config: {
+    multSel: false
+  },
+
+  constructor: function () {
+    this.callParent()
+    this.initCond()
+    this.initField()
+    this.biz = new DE.Sys.SysGroup.Biz()
+    DE.merge(this.config, this._config)
+  },
+
+  initCond: function () {
+    this.page.cond.limit = MaxInt
+
+    var uiCond = this.ui.cond
+    var daCond = this.data.cond
+
+    uiCond['sGroupName'] = { placeholder: '机构名称', allowBlank: true, caption: '', defValue: '' }
+    uiCond['iStatus'] = {
+      placeholder: '',
+      allowBlank: true,
+      caption: '',
+      defValue: '',
+      'const': {
+        code: 'Sys.Group.Status'
+      }
+    }
+  },
+
+  initField: function () {
+    var uiField = this.ui.fields
+    var daField = this.data.fields
+
+    uiField['sGroupName'] = { placeholder: '机构名称', allowBlank: true, caption: '机构名称', defValue: '' }
+    uiField['sContactor'] = { placeholder: '联系人', allowBlank: true, caption: '联系人', defValue: '' }
+    uiField['sPhone'] = { placeholder: '电话', allowBlank: true, caption: '电话', defValue: '' }
+    uiField['sGroupType'] = {
+      placeholder: '',
+      allowBlank: true,
+      caption: '机构类型',
+      defValue: '',
+      inline: true,
+      'const': {
+        code: 'Sys.Group.Entity.Type'
+      }
+    }
+    uiField['iStatus'] = {
+      placeholder: '',
+      allowBlank: true,
+      caption: '状态',
+      defValue: '',
+      inline: true,
+      'const': {
+        code: 'Sys.Group.Status'
+      }
+    }
+  },
+
+  getStatusClass: function (val) {
+    switch (val) {
+      case 1:
+        return 'text-success font-bold'
+      case -1:
+      case -2:
+        return 'text-danger'
+      default:
+        return 'text-muted'
+    }
+  },
+
+  doShowManager: function (item) {
+    var _this = this
+    this.callAction('ManagerGet', item, {
+      onGetData: function (bizdata, def) {
+        _this.OperUser.setInit([{
+          sIntroType: 'BIZ',
+          sIntroID: bizdata.Object.sID
+        }], true, true)
+
+        _this.OperImpower.setInit([{
+          sGroupID: bizdata.Object.sID
+        }], true, true)
+
+        _this.OperCompus.setInit([{
+          sGroupID: bizdata.Object.sID
+        }], true, true)
+
+        _this.OperUser.callQuery()
+        _this.OperCompus.callQuery()
+        _this.OperImpower.callQuery()
+      }
+    })
+  },
+
+  doFreshGroupMp: function () {
+    var _this = this
+
+    // 获取MainMp配置
+    this.callAction('GetGroupMp', {}, {
+      onSuccess: function (bizdata, def) {
+        Vue.set(_this.ui, 'BindUrl', bizdata.Object.BindUrl)
+        Vue.set(_this.ui, 'GroupMp', bizdata.Object.GroupMp)
+      }
+    })
+  },
+
+  doShowGroupMpBind: function () {
+    Vue.set(this.ui, 'isBinding', true)
+    var _this = this
+    setTimeout(function () {
+      _this.ui.frmBind = DE.UI.Oper.showPopBlock($('#biz-group-mp-bind'), {
+        model: 'TOP',
+        ole: 'body',
+        clickClose: true
+      })
+    }, 100)
+  },
+
+  doCloseGroupMpBind: function () {
+    Vue.set(this.ui, 'isBinding', false)
+    this.ui.frmBind.close()
+    this.doFreshGroupMp()
+  },
+
+  callTest: function () {
+    var p1 = new DE.Promise(function (resolve, reject) {
+      setTimeout(function () {
+        resolve(111)
+      }, 1000)
+    })
+
+    console.log(p1)
+
+    p1.then(function (p1data) {
+      console.log(p1data)
+    })
+  }
+
+})
